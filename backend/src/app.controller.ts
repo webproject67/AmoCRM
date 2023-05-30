@@ -6,7 +6,11 @@ export class AppController {
   constructor(private readonly appService: AppService) {}
 
   @Get()
-  getTokens(): any {
+  getTokens(): Promise<{
+    leads: object[];
+    pipeline: object;
+    users: object[];
+  }> {
     return this.appService.getTokens();
   }
 }
