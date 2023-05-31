@@ -12,7 +12,6 @@ interface IResultLeads {
     leads: {
       pipeline_id: number;
       responsible_user_id: number;
-      account_id: number;
     }[];
   };
 }
@@ -20,7 +19,7 @@ interface IResultLeads {
 interface IResultContacts {
   _embedded: {
     contacts: {
-      account_id: number;
+      responsible_user_id: number;
     }[];
   };
 }
@@ -96,7 +95,7 @@ export class AppService {
 
     const newLeads = leads.map((lead) => {
       const filterContacts = contacts.filter(
-        (contact) => contact.account_id === lead.account_id,
+        (contact) => contact.responsible_user_id === lead.responsible_user_id,
       );
 
       return { ...lead, contacts: filterContacts };
@@ -113,7 +112,6 @@ export class AppService {
     {
       pipeline_id: number;
       responsible_user_id: number;
-      account_id: number;
     }[]
   > {
     const response = await fetch(`${process.env.DOMAIN}/api/v4/leads`, {
@@ -127,7 +125,9 @@ export class AppService {
     return result._embedded.leads;
   }
 
-  private async getContacts(token: string): Promise<{ account_id: number }[]> {
+  private async getContacts(
+    token: string,
+  ): Promise<{ responsible_user_id: number }[]> {
     const response = await fetch(`${process.env.DOMAIN}/api/v4/contacts`, {
       headers: {
         Authorization: `Bearer ${token}`,
