@@ -10,14 +10,18 @@ interface IResultTokens {
 interface IResultLeads {
   _embedded: {
     leads: {
-      pipeline_id: string;
+      pipeline_id: number;
+      responsible_user_id: number;
+      account_id: number;
     }[];
   };
 }
 
 interface IResultContacts {
   _embedded: {
-    contacts: object[];
+    contacts: {
+      account_id: number;
+    }[];
   };
 }
 
@@ -43,7 +47,6 @@ export class AppService {
   constructor(@InjectModel('User') private userModel: Model<IUser>) {}
   async getTokens(): Promise<{
     leads: object[];
-    contacts: object[];
     pipeline: object;
     users: object[];
   }> {
@@ -91,9 +94,16 @@ export class AppService {
     );
     const users = await this.getUsers(result.access_token);
 
+    const newLeads = leads.map((lead) => {
+      const filterContacts = contacts.filter(
+        (contact) => contact.account_id === lead.account_id,
+      );
+
+      return { ...lead, contacts: filterContacts };
+    });
+
     return {
-      leads,
-      contacts,
+      leads: newLeads,
       pipeline,
       users,
     };
@@ -101,7 +111,9 @@ export class AppService {
 
   private async getLeads(token: string): Promise<
     {
-      pipeline_id: string;
+      pipeline_id: number;
+      responsible_user_id: number;
+      account_id: number;
     }[]
   > {
     const response = await fetch(`${process.env.DOMAIN}/api/v4/leads`, {
@@ -115,7 +127,7 @@ export class AppService {
     return result._embedded.leads;
   }
 
-  private async getContacts(token: string): Promise<object[]> {
+  private async getContacts(token: string): Promise<{ account_id: number }[]> {
     const response = await fetch(`${process.env.DOMAIN}/api/v4/contacts`, {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -127,7 +139,7 @@ export class AppService {
     return result._embedded.contacts;
   }
 
-  private async getPipelines(token: string, id: string): Promise<object> {
+  private async getPipelines(token: string, id: number): Promise<object> {
     const response = await fetch(
       `${process.env.DOMAIN}/api/v4/leads/pipelines/${id}`,
       {
