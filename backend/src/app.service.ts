@@ -9,7 +9,15 @@ interface IResultTokens {
 
 interface IResultLeads {
   _embedded: {
-    leads: object[];
+    leads: {
+      pipeline_id: string;
+    }[];
+  };
+}
+
+interface IResultContacts {
+  _embedded: {
+    contacts: object[];
   };
 }
 
@@ -35,6 +43,7 @@ export class AppService {
   constructor(@InjectModel('User') private userModel: Model<IUser>) {}
   async getTokens(): Promise<{
     leads: object[];
+    contacts: object[];
     pipeline: object;
     users: object[];
   }> {
@@ -75,17 +84,26 @@ export class AppService {
     }
 
     const leads = await this.getLeads(result.access_token);
-    const pipelines = await this.getPipelines(result.access_token);
+    const contacts = await this.getContacts(result.access_token);
+    const pipeline = await this.getPipelines(
+      result.access_token,
+      leads[0].pipeline_id,
+    );
     const users = await this.getUsers(result.access_token);
 
     return {
       leads,
-      pipeline: pipelines[0],
+      contacts,
+      pipeline,
       users,
     };
   }
 
-  private async getLeads(token: string): Promise<object[]> {
+  private async getLeads(token: string): Promise<
+    {
+      pipeline_id: string;
+    }[]
+  > {
     const response = await fetch(`${process.env.DOMAIN}/api/v4/leads`, {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -97,9 +115,21 @@ export class AppService {
     return result._embedded.leads;
   }
 
-  private async getPipelines(token: string): Promise<object[]> {
+  private async getContacts(token: string): Promise<object[]> {
+    const response = await fetch(`${process.env.DOMAIN}/api/v4/contacts`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const result: IResultContacts = await response.json();
+
+    return result._embedded.contacts;
+  }
+
+  private async getPipelines(token: string, id: string): Promise<object> {
     const response = await fetch(
-      `${process.env.DOMAIN}/api/v4/leads/pipelines`,
+      `${process.env.DOMAIN}/api/v4/leads/pipelines/${id}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -109,7 +139,7 @@ export class AppService {
 
     const result: IResultPipelines = await response.json();
 
-    return result._embedded.pipelines;
+    return result;
   }
 
   private async getUsers(token: string): Promise<object[]> {

@@ -8,6 +8,7 @@ export class AppController {
   @Get()
   getTokens(): Promise<{
     leads: object[];
+    contacts: object[];
     pipeline: object;
     users: object[];
   }> {
