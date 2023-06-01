@@ -44,7 +44,10 @@ interface IUser {
 @Injectable()
 export class AppService {
   constructor(@InjectModel('User') private userModel: Model<IUser>) {}
-  async getTokens(): Promise<{
+
+  pipelineId: number;
+
+  async getTokens(query: string): Promise<{
     leads: object[];
     pipeline: object;
     users: object[];
@@ -85,12 +88,9 @@ export class AppService {
         : this.createDocumentDB(result);
     }
 
-    const leads = await this.getLeads(result.access_token);
+    const leads = await this.getLeads(result.access_token, query);
     const contacts = await this.getContacts(result.access_token);
-    const pipeline = await this.getPipelines(
-      result.access_token,
-      leads[0].pipeline_id,
-    );
+    const pipeline = await this.getPipelines(result.access_token);
     const users = await this.getUsers(result.access_token);
 
     const newLeads = leads.map((lead) => {
@@ -108,21 +108,33 @@ export class AppService {
     };
   }
 
-  private async getLeads(token: string): Promise<
+  private async getLeads(
+    token: string,
+    query: string,
+  ): Promise<
     {
       pipeline_id: number;
       responsible_user_id: number;
     }[]
   > {
-    const response = await fetch(`${process.env.DOMAIN}/api/v4/leads`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
+    const response = await fetch(
+      `${process.env.DOMAIN}/api/v4/leads?query=${query}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       },
-    });
+    );
 
-    const result: IResultLeads = await response.json();
+    if (response.status === 204) return [];
 
-    return result._embedded.leads;
+    const {
+      _embedded: { leads },
+    }: IResultLeads = await response.json();
+
+    this.pipelineId = leads[0].pipeline_id;
+
+    return leads;
   }
 
   private async getContacts(
@@ -139,9 +151,9 @@ export class AppService {
     return result._embedded.contacts;
   }
 
-  private async getPipelines(token: string, id: number): Promise<object> {
+  private async getPipelines(token: string): Promise<object> {
     const response = await fetch(
-      `${process.env.DOMAIN}/api/v4/leads/pipelines/${id}`,
+      `${process.env.DOMAIN}/api/v4/leads/pipelines/${this.pipelineId}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
