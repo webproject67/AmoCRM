@@ -1,47 +1,252 @@
 <script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
-import TheWelcome from './components/TheWelcome.vue'
+import { ref, onMounted, type Ref } from 'vue'
+import {
+  SearchOutlined,
+  WarningOutlined,
+  LoadingOutlined,
+  UserOutlined,
+  PhoneOutlined,
+  MailOutlined
+} from '@ant-design/icons-vue'
+
+const columns = [
+  {
+    title: 'Название',
+    dataIndex: 'name',
+    key: 'name',
+    width: '40%'
+  },
+  {
+    title: 'Статус',
+    dataIndex: 'status_id',
+    key: 'status_id',
+    width: '15%'
+  },
+  {
+    title: 'Ответственный',
+    dataIndex: 'responsible_user_id',
+    key: 'responsible_user_id',
+    width: '15%'
+  },
+  {
+    title: 'Дата создания',
+    dataIndex: 'created_at',
+    key: 'created_at',
+    width: '15%',
+    align: 'center'
+  },
+  {
+    title: 'Бюджет',
+    dataIndex: 'price',
+    key: 'price',
+    width: '15%',
+    align: 'center'
+  }
+]
+
+const isWarned = ref(false)
+const isLoaded = ref(false)
+const searchText = ref('')
+const data: Ref<{
+  leads: object[]
+  pipeline: {
+    _embedded?: {
+      statuses: {
+        id: number
+        name: string
+        color: string
+      }[]
+    }
+  }
+  users: {
+    id: number
+    name: string
+  }[]
+}> = ref({ leads: [], pipeline: {}, users: [] })
+
+const getData = (): void => {
+  isLoaded.value = true
+
+  fetch(`http://localhost:3000/api/leads?query=${searchText.value}`, {
+    headers: { 'Content-type': 'application/json' }
+  })
+    .then((res) => res.json())
+    .then((response) => {
+      const { leads, pipeline, users } = response
+
+      const updatedLeads = leads.map((lead: object, i: number) => ({ ...lead, key: i }))
+
+      data.value = { leads: updatedLeads, pipeline, users }
+
+      isLoaded.value = false
+    })
+    .catch((error) => {
+      console.log('Looks like there was a problem: \n', error)
+    })
+}
+
+const changeSearchText = (event: Event): void => {
+  const value = (event.target as HTMLInputElement).value
+
+  if (value.length >= 3 || value.length === 0) {
+    isWarned.value = false
+    searchText.value = value
+    getData()
+    return
+  }
+
+  isWarned.value = true
+}
+
+const numberFormat = (value: number): string =>
+  new Intl.NumberFormat('ru-RU', {
+    style: 'currency',
+    currency: 'RUB',
+    minimumFractionDigits: 0
+  }).format(value)
+
+const localeDate = (value: number): string =>
+  new Date(value * 1000)
+    .toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
+    .replace(/\s*г\./, '')
+
+const getResponsibleUser = (id: number): string => {
+  const user = data.value.users.find((user) => user.id === id)
+  return user ? user.name : 'error'
+}
+
+const getStatus = (id: number, value?: string) => {
+  const pipelineEmbedded = data.value.pipeline._embedded
+
+  if (pipelineEmbedded) {
+    const statusText = pipelineEmbedded.statuses.find((status) => status.id === id)
+
+    if (statusText) {
+      return value === 'text' ? statusText.name : statusText.color
+    }
+
+    return 'error'
+  }
+}
+
+onMounted(() => getData())
 </script>
 
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="./assets/logo.svg" width="125" height="125" />
-
-    <div class="wrapper">
-      <HelloWorld msg="You did it!" />
-    </div>
-  </header>
-
-  <main>
-    <TheWelcome />
-  </main>
+  <a-layout>
+    <a-layout-content>
+      <a-card title="Пример тестового задания">
+        <template #extra>
+          <a-tooltip v-if="isWarned" title="Поиск работает от 3 символов">
+            <warning-outlined />
+          </a-tooltip>
+          <a-input v-on:input="changeSearchText" placeholder="Поиск сделок" autofocus>
+            <template #suffix>
+              <a-tooltip>
+                <search-outlined v-if="!isLoaded" />
+                <loading-outlined v-else />
+              </a-tooltip>
+            </template>
+          </a-input>
+        </template>
+      </a-card>
+      <a-spin :spinning="isLoaded">
+        <a-card>
+          <a-table :dataSource="data.leads" :columns="columns" :pagination="false">
+            <template #bodyCell="{ column, record }">
+              <template v-if="column.key === 'responsible_user_id'">
+                <a-avatar size="small">
+                  <template #icon><UserOutlined /></template>
+                </a-avatar>
+                {{ getResponsibleUser(record.responsible_user_id) }}
+              </template>
+              <template v-if="column.key === 'status_id'">
+                <a-tag :color="getStatus(record.status_id)">
+                  {{ getStatus(record.status_id, 'text') }}
+                </a-tag>
+              </template>
+              <template v-if="column.key === 'created_at'">
+                {{ localeDate(record.created_at) }}
+              </template>
+              <template v-if="column.key === 'price'">
+                {{ numberFormat(record.price) }}
+              </template>
+            </template>
+            <template #expandedRowRender="{ record }">
+              <template v-for="contact in record.contacts" :key="contact">
+                <p class="contacts">
+                  <a-avatar size="small">
+                    <template #icon>
+                      <UserOutlined />
+                    </template>
+                  </a-avatar>
+                  {{ contact.name }}
+                  <template
+                    v-for="communication in contact.custom_fields_values"
+                    :key="communication"
+                  >
+                    <template v-if="communication.field_code === 'PHONE'">
+                      <template v-for="phone in communication.values" :key="phone">
+                        <a-divider type="vertical" />
+                        <a :href="'tel:' + phone.value">
+                          <a-tooltip>
+                            <phone-outlined />
+                          </a-tooltip>
+                        </a>
+                      </template>
+                    </template>
+                    <template v-if="communication.field_code === 'EMAIL'">
+                      <template v-for="email in communication.values" :key="email">
+                        <a-divider type="vertical" />
+                        <a :href="'mailto:' + email.value">
+                          <a-tooltip>
+                            <mail-outlined />
+                          </a-tooltip>
+                        </a>
+                      </template>
+                    </template>
+                  </template>
+                </p>
+              </template>
+            </template>
+          </a-table>
+        </a-card>
+      </a-spin>
+    </a-layout-content>
+  </a-layout>
 </template>
 
 <style scoped>
-header {
-  line-height: 1.5;
+.ant-layout {
+  height: 100%;
 }
 
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
+.ant-layout-content {
+  padding: 50px;
 }
 
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
+.anticon-warning {
+  margin: 0 10px;
+  color: red;
+}
 
-  .logo {
-    margin: 0 2rem 0 0;
-  }
+.ant-input-affix-wrapper {
+  width: 300px;
+}
 
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
+.ant-avatar {
+  margin-right: 8px;
+}
+
+.ant-tag {
+  color: #000000;
+}
+
+.contacts {
+  padding-left: 50px;
+}
+
+.anticon-phone {
+  transform: rotate(90deg);
 }
 </style>
