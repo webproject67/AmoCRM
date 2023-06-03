@@ -16,6 +16,7 @@ import {
 @Injectable()
 export class AppService {
   constructor(@InjectModel('User') private userModel: Model<UserDb>) {}
+
   async getData(query: string): Promise<Data> {
     const { access_token } = await this.getTokens();
     const leads = await this.getLeads(access_token, query);
@@ -39,14 +40,7 @@ export class AppService {
   }
 
   private async getLeads(token: string, query: string): Promise<Leads> {
-    const response = await fetch(
-      `${process.env.DOMAIN}/api/v4/leads?query=${query}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      },
-    );
+    const response = await this.fetchGet(token, `leads?query=${query}`);
 
     if (response.status === 204) return [];
 
@@ -56,11 +50,7 @@ export class AppService {
   }
 
   private async getContacts(token: string): Promise<Contacts> {
-    const response = await fetch(`${process.env.DOMAIN}/api/v4/contacts`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await this.fetchGet(token, 'contacts');
 
     const result: Contact = await response.json();
 
@@ -68,14 +58,7 @@ export class AppService {
   }
 
   private async getPipelines(token: string): Promise<object[]> {
-    const response = await fetch(
-      `${process.env.DOMAIN}/api/v4/leads/pipelines`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      },
-    );
+    const response = await this.fetchGet(token, 'leads/pipelines');
 
     const result: Pipeline = await response.json();
 
@@ -83,11 +66,7 @@ export class AppService {
   }
 
   private async getUsers(token: string): Promise<object[]> {
-    const response = await fetch(`${process.env.DOMAIN}/api/v4/users`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await this.fetchGet(token, 'users');
 
     const result: User = await response.json();
 
@@ -112,36 +91,18 @@ export class AppService {
   }
 
   private async getNewTokens(refreshToken: string): Promise<Token> {
-    const response = await fetch(`${process.env.DOMAIN}/oauth2/access_token`, {
-      method: 'POST',
-      body: JSON.stringify({
-        client_id: process.env.CLIENT_ID,
-        client_secret: process.env.CLIENT_SECRET,
-        grant_type: 'refresh_token',
-        refresh_token: refreshToken,
-        redirect_uri: 'http://localhost:3000',
-      }),
-      headers: {
-        'Content-Type': 'application/json',
-      },
+    const response = await this.fetchPost({
+      grant_type: 'refresh_token',
+      refresh_token: refreshToken,
     });
 
     return await response.json();
   }
 
   private async getTokens(): Promise<Token> {
-    const response = await fetch(`${process.env.DOMAIN}/oauth2/access_token`, {
-      method: 'POST',
-      body: JSON.stringify({
-        client_id: process.env.CLIENT_ID,
-        client_secret: process.env.CLIENT_SECRET,
-        grant_type: 'authorization_code',
-        code: process.env.CODE,
-        redirect_uri: 'http://localhost:3000',
-      }),
-      headers: {
-        'Content-Type': 'application/json',
-      },
+    const response = await this.fetchPost({
+      grant_type: 'authorization_code',
+      code: process.env.CODE,
     });
 
     if (response.status === 400) {
@@ -167,5 +128,29 @@ export class AppService {
       : this.createDocumentDB(result);
 
     return result;
+  }
+
+  private async fetchGet(token: string, urn: string): Promise<Response> {
+    return await fetch(`${process.env.DOMAIN}/api/v4/${urn}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  }
+
+  private async fetchPost(bodyParam: object): Promise<Response> {
+    const body = {
+      client_id: process.env.CLIENT_ID,
+      client_secret: process.env.CLIENT_SECRET,
+      redirect_uri: 'http://localhost:3000',
+    };
+
+    return await fetch(`${process.env.DOMAIN}/oauth2/access_token`, {
+      method: 'POST',
+      body: JSON.stringify({ ...body, ...bodyParam }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
   }
 }
