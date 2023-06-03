@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { PhoneOutlined, MailOutlined } from '@ant-design/icons-vue'
 import TheAvatar from './TheAvatar.vue'
+import TheDivider from './TheDivider.vue'
 import { Communication } from '../const'
 
 const { PHONE, EMAIL } = Communication
@@ -22,22 +22,9 @@ defineProps<{
   <div class="contact">
     <TheAvatar />
     {{ contact.name }}
-    <template v-for="communication in contact.custom_fields_values" :key="communication">
-      <template v-if="communication.field_code === PHONE">
-        <template v-for="phone in communication.values" :key="phone">
-          <a-divider type="vertical" />
-          <a :href="'tel:' + phone.value">
-            <phone-outlined />
-          </a>
-        </template>
-      </template>
-      <template v-if="communication.field_code === EMAIL">
-        <template v-for="email in communication.values" :key="email">
-          <a-divider type="vertical" />
-          <a :href="'mailto:' + email.value">
-            <mail-outlined />
-          </a>
-        </template>
+    <template v-for="contacts in contact.custom_fields_values" :key="contacts">
+      <template v-for="contact in contacts.values" :key="contact">
+        <TheDivider :contacts="contacts" :contact="contact" />
       </template>
     </template>
   </div>

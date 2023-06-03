@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, type Ref } from 'vue'
+import type { IData, IPipeline } from './types'
 import TheLayout from './components/TheLayout.vue'
 import TheTooltip from './components/TheTooltip.vue'
 import TextField from './components/TextField.vue'
@@ -7,65 +8,9 @@ import TheAvatar from './components/TheAvatar.vue'
 import TheTag from './components/TheTag.vue'
 import TheContact from './components/TheContact.vue'
 import { NameSpace } from './const'
+import columns from './columns'
 
-interface IData {
-  leads: object[]
-  pipelines: IPipeline[]
-  users: IUser[]
-}
-
-interface IPipeline {
-  id: number
-  _embedded: {
-    statuses: {
-      id: number
-      name: string
-      color: string
-    }[]
-  }
-}
-
-interface IUser {
-  id: number
-  name: string
-}
-
-const { NAME, STATUS_ID, RESPONSIBLE_USER_ID, CREATED_AT, PRICE } = NameSpace
-
-const columns = [
-  {
-    title: 'Название',
-    dataIndex: NAME,
-    key: NAME,
-    width: '40%'
-  },
-  {
-    title: 'Статус',
-    dataIndex: STATUS_ID,
-    key: STATUS_ID,
-    width: '15%'
-  },
-  {
-    title: 'Ответственный',
-    dataIndex: RESPONSIBLE_USER_ID,
-    key: RESPONSIBLE_USER_ID,
-    width: '15%'
-  },
-  {
-    title: 'Дата создания',
-    dataIndex: CREATED_AT,
-    key: CREATED_AT,
-    width: '15%',
-    align: 'center'
-  },
-  {
-    title: 'Бюджет',
-    dataIndex: PRICE,
-    key: PRICE,
-    width: '15%',
-    align: 'center'
-  }
-]
+const { STATUS_ID, RESPONSIBLE_USER_ID, CREATED_AT, PRICE } = NameSpace
 
 const isWarned = ref(false)
 const isLoaded = ref(false)
@@ -100,6 +45,7 @@ const changeSearchText = (event: Event): void => {
     isWarned.value = false
     searchText.value = value
     getData()
+
     return
   }
 
