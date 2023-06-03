@@ -9,6 +9,28 @@ import {
   MailOutlined
 } from '@ant-design/icons-vue'
 
+interface IData {
+  leads: object[]
+  pipelines: IPipeline[]
+  users: IUser[]
+}
+
+interface IPipeline {
+  id: number
+  _embedded: {
+    statuses: {
+      id: number
+      name: string
+      color: string
+    }[]
+  }
+}
+
+interface IUser {
+  id: number
+  name: string
+}
+
 const columns = [
   {
     title: 'Название',
@@ -47,22 +69,7 @@ const columns = [
 const isWarned = ref(false)
 const isLoaded = ref(false)
 const searchText = ref('')
-const data: Ref<{
-  leads: object[]
-  pipeline: {
-    _embedded?: {
-      statuses: {
-        id: number
-        name: string
-        color: string
-      }[]
-    }
-  }
-  users: {
-    id: number
-    name: string
-  }[]
-}> = ref({ leads: [], pipeline: {}, users: [] })
+const data: Ref<IData> = ref({ leads: [], pipelines: [], users: [] })
 
 const getData = (): void => {
   isLoaded.value = true
@@ -71,12 +78,12 @@ const getData = (): void => {
     headers: { 'Content-type': 'application/json' }
   })
     .then((res) => res.json())
-    .then((response) => {
-      const { leads, pipeline, users } = response
+    .then((response: IData) => {
+      const { leads, pipelines, users } = response
 
       const updatedLeads = leads.map((lead: object, i: number) => ({ ...lead, key: i }))
 
-      data.value = { leads: updatedLeads, pipeline, users }
+      data.value = { leads: updatedLeads, pipelines, users }
 
       isLoaded.value = false
     })
@@ -115,18 +122,14 @@ const getResponsibleUser = (id: number): string => {
   return user ? user.name : 'error'
 }
 
-const getStatus = (id: number, value?: string) => {
-  const pipelineEmbedded = data.value.pipeline._embedded
+const getStatus = (pipelineId: number, statusId: number, value?: string): string => {
+  const pipeline = data.value.pipelines.filter((pipeline: IPipeline) => pipeline.id === pipelineId)
 
-  if (pipelineEmbedded) {
-    const statusText = pipelineEmbedded.statuses.find((status) => status.id === id)
+  const status = pipeline[0]._embedded.statuses.find((status) => status.id === statusId)
 
-    if (statusText) {
-      return value === 'text' ? statusText.name : statusText.color
-    }
+  if (status) return value === 'text' ? status.name : status.color
 
-    return 'error'
-  }
+  return 'error'
 }
 
 onMounted(() => getData())
@@ -161,8 +164,8 @@ onMounted(() => getData())
                 {{ getResponsibleUser(record.responsible_user_id) }}
               </template>
               <template v-if="column.key === 'status_id'">
-                <a-tag :color="getStatus(record.status_id)">
-                  {{ getStatus(record.status_id, 'text') }}
+                <a-tag :color="getStatus(record.pipeline_id, record.status_id)">
+                  {{ getStatus(record.pipeline_id, record.status_id, 'text') }}
                 </a-tag>
               </template>
               <template v-if="column.key === 'created_at'">

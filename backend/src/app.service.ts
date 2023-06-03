@@ -16,14 +16,11 @@ import {
 @Injectable()
 export class AppService {
   constructor(@InjectModel('User') private userModel: Model<UserDb>) {}
-
-  private pipelineId: number;
-
   async getData(query: string): Promise<Data> {
     const { access_token } = await this.getTokens();
     const leads = await this.getLeads(access_token, query);
     const contacts = await this.getContacts(access_token);
-    const pipeline = await this.getPipelines(access_token);
+    const pipelines = await this.getPipelines(access_token);
     const users = await this.getUsers(access_token);
 
     const gluedLeads = leads.map((lead) => {
@@ -36,7 +33,7 @@ export class AppService {
 
     return {
       leads: gluedLeads,
-      pipeline,
+      pipelines,
       users,
     };
   }
@@ -53,13 +50,9 @@ export class AppService {
 
     if (response.status === 204) return [];
 
-    const {
-      _embedded: { leads },
-    }: Lead = await response.json();
+    const result: Lead = await response.json();
 
-    this.pipelineId = leads[0].pipeline_id;
-
-    return leads;
+    return result._embedded.leads;
   }
 
   private async getContacts(token: string): Promise<Contacts> {
@@ -74,9 +67,9 @@ export class AppService {
     return result._embedded.contacts;
   }
 
-  private async getPipelines(token: string): Promise<object> {
+  private async getPipelines(token: string): Promise<object[]> {
     const response = await fetch(
-      `${process.env.DOMAIN}/api/v4/leads/pipelines/${this.pipelineId}`,
+      `${process.env.DOMAIN}/api/v4/leads/pipelines`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -86,7 +79,7 @@ export class AppService {
 
     const result: Pipeline = await response.json();
 
-    return result;
+    return result._embedded.pipelines;
   }
 
   private async getUsers(token: string): Promise<object[]> {

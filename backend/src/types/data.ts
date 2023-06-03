@@ -1,5 +1,5 @@
 export type Data = {
   leads: object[];
-  pipeline: object;
+  pipelines: object[];
   users: object[];
 };
