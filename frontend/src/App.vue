@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import { ref, onMounted, type Ref } from 'vue'
-import {
-  SearchOutlined,
-  WarningOutlined,
-  LoadingOutlined,
-  UserOutlined,
-  PhoneOutlined,
-  MailOutlined
-} from '@ant-design/icons-vue'
+import TheLayout from './components/TheLayout.vue'
+import TheTooltip from './components/TheTooltip.vue'
+import TextField from './components/TextField.vue'
+import TheAvatar from './components/TheAvatar.vue'
+import TheTag from './components/TheTag.vue'
+import TheContact from './components/TheContact.vue'
+import { NameSpace } from './const'
 
 interface IData {
   leads: object[]
@@ -31,36 +30,38 @@ interface IUser {
   name: string
 }
 
+const { NAME, STATUS_ID, RESPONSIBLE_USER_ID, CREATED_AT, PRICE } = NameSpace
+
 const columns = [
   {
     title: 'Название',
-    dataIndex: 'name',
-    key: 'name',
+    dataIndex: NAME,
+    key: NAME,
     width: '40%'
   },
   {
     title: 'Статус',
-    dataIndex: 'status_id',
-    key: 'status_id',
+    dataIndex: STATUS_ID,
+    key: STATUS_ID,
     width: '15%'
   },
   {
     title: 'Ответственный',
-    dataIndex: 'responsible_user_id',
-    key: 'responsible_user_id',
+    dataIndex: RESPONSIBLE_USER_ID,
+    key: RESPONSIBLE_USER_ID,
     width: '15%'
   },
   {
     title: 'Дата создания',
-    dataIndex: 'created_at',
-    key: 'created_at',
+    dataIndex: CREATED_AT,
+    key: CREATED_AT,
     width: '15%',
     align: 'center'
   },
   {
     title: 'Бюджет',
-    dataIndex: 'price',
-    key: 'price',
+    dataIndex: PRICE,
+    key: PRICE,
     width: '15%',
     align: 'center'
   }
@@ -136,120 +137,41 @@ onMounted(() => getData())
 </script>
 
 <template>
-  <a-layout>
-    <a-layout-content>
-      <a-card title="Пример тестового задания">
-        <template #extra>
-          <a-tooltip v-if="isWarned" title="Поиск работает от 3 символов">
-            <warning-outlined />
-          </a-tooltip>
-          <a-input v-on:input="changeSearchText" placeholder="Поиск сделок" autofocus>
-            <template #suffix>
-              <a-tooltip>
-                <search-outlined v-if="!isLoaded" />
-                <loading-outlined v-else />
-              </a-tooltip>
+  <TheLayout>
+    <a-card title="Пример тестового задания">
+      <template #extra>
+        <TheTooltip :is-visible="isWarned" />
+        <TextField :is-loaded="isLoaded" :change-search-text="changeSearchText" />
+      </template>
+    </a-card>
+    <a-spin :spinning="isLoaded">
+      <a-card>
+        <a-table :dataSource="data.leads" :columns="columns" :pagination="false">
+          <template #bodyCell="{ column, record }">
+            <template v-if="column.key === RESPONSIBLE_USER_ID">
+              <TheAvatar />
+              {{ getResponsibleUser(record.responsible_user_id) }}
             </template>
-          </a-input>
-        </template>
+            <template v-if="column.key === STATUS_ID">
+              <TheTag
+                :color="getStatus(record.pipeline_id, record.status_id)"
+                :text="getStatus(record.pipeline_id, record.status_id, 'text')"
+              />
+            </template>
+            <template v-if="column.key === CREATED_AT">
+              {{ localeDate(record.created_at) }}
+            </template>
+            <template v-if="column.key === PRICE">
+              {{ numberFormat(record.price) }}
+            </template>
+          </template>
+          <template #expandedRowRender="{ record }">
+            <template v-for="contact in record.contacts" :key="contact">
+              <TheContact :contact="contact" />
+            </template>
+          </template>
+        </a-table>
       </a-card>
-      <a-spin :spinning="isLoaded">
-        <a-card>
-          <a-table :dataSource="data.leads" :columns="columns" :pagination="false">
-            <template #bodyCell="{ column, record }">
-              <template v-if="column.key === 'responsible_user_id'">
-                <a-avatar size="small">
-                  <template #icon><UserOutlined /></template>
-                </a-avatar>
-                {{ getResponsibleUser(record.responsible_user_id) }}
-              </template>
-              <template v-if="column.key === 'status_id'">
-                <a-tag :color="getStatus(record.pipeline_id, record.status_id)">
-                  {{ getStatus(record.pipeline_id, record.status_id, 'text') }}
-                </a-tag>
-              </template>
-              <template v-if="column.key === 'created_at'">
-                {{ localeDate(record.created_at) }}
-              </template>
-              <template v-if="column.key === 'price'">
-                {{ numberFormat(record.price) }}
-              </template>
-            </template>
-            <template #expandedRowRender="{ record }">
-              <template v-for="contact in record.contacts" :key="contact">
-                <p class="contacts">
-                  <a-avatar size="small">
-                    <template #icon>
-                      <UserOutlined />
-                    </template>
-                  </a-avatar>
-                  {{ contact.name }}
-                  <template
-                    v-for="communication in contact.custom_fields_values"
-                    :key="communication"
-                  >
-                    <template v-if="communication.field_code === 'PHONE'">
-                      <template v-for="phone in communication.values" :key="phone">
-                        <a-divider type="vertical" />
-                        <a :href="'tel:' + phone.value">
-                          <a-tooltip>
-                            <phone-outlined />
-                          </a-tooltip>
-                        </a>
-                      </template>
-                    </template>
-                    <template v-if="communication.field_code === 'EMAIL'">
-                      <template v-for="email in communication.values" :key="email">
-                        <a-divider type="vertical" />
-                        <a :href="'mailto:' + email.value">
-                          <a-tooltip>
-                            <mail-outlined />
-                          </a-tooltip>
-                        </a>
-                      </template>
-                    </template>
-                  </template>
-                </p>
-              </template>
-            </template>
-          </a-table>
-        </a-card>
-      </a-spin>
-    </a-layout-content>
-  </a-layout>
+    </a-spin>
+  </TheLayout>
 </template>
-
-<style scoped>
-.ant-layout {
-  height: 100%;
-}
-
-.ant-layout-content {
-  padding: 50px;
-}
-
-.anticon-warning {
-  margin: 0 10px;
-  color: red;
-}
-
-.ant-input-affix-wrapper {
-  width: 300px;
-}
-
-.ant-avatar {
-  margin-right: 8px;
-}
-
-.ant-tag {
-  color: #000000;
-}
-
-.contacts {
-  padding-left: 50px;
-}
-
-.anticon-phone {
-  transform: rotate(90deg);
-}
-</style>
