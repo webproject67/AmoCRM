@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, type Ref } from 'vue'
+import { type Ref, ref, onMounted, watch } from 'vue'
 import type { IData, IPipeline } from './types'
 import TheLayout from './components/TheLayout.vue'
 import TheTooltip from './components/TheTooltip.vue'
@@ -38,20 +38,6 @@ const getData = (): void => {
     })
 }
 
-const changeSearchText = (event: Event): void => {
-  const value = (event.target as HTMLInputElement).value
-
-  if (value.length >= 3 || value.length === 0) {
-    isWarned.value = false
-    searchText.value = value
-    getData()
-
-    return
-  }
-
-  isWarned.value = true
-}
-
 const numberFormat = (value: number): string =>
   new Intl.NumberFormat('ru-RU', {
     style: 'currency',
@@ -79,6 +65,16 @@ const getStatus = (pipelineId: number, statusId: number, value?: string): string
   return 'error'
 }
 
+watch(searchText, () => {
+  if (searchText.value.length >= 3 || searchText.value.length === 0) {
+    isWarned.value = false
+    getData()
+    return
+  }
+
+  isWarned.value = true
+})
+
 onMounted(() => getData())
 </script>
 
@@ -87,7 +83,7 @@ onMounted(() => getData())
     <a-card title="Пример тестового задания">
       <template #extra>
         <TheTooltip :is-visible="isWarned" />
-        <TextField :is-loaded="isLoaded" :change-search-text="changeSearchText" />
+        <TextField :is-loaded="isLoaded" v-model="searchText" />
       </template>
     </a-card>
     <a-spin :spinning="isLoaded">

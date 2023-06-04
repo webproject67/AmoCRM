@@ -3,12 +3,18 @@ import { SearchOutlined, LoadingOutlined } from '@ant-design/icons-vue'
 
 defineProps<{
   isLoaded: boolean
-  changeSearchText: (evt: Event) => void
+  modelValue: string
 }>()
 </script>
 
 <template>
-  <a-input type="text" placeholder="Поиск сделок" autofocus v-on:input="changeSearchText">
+  <a-input
+    type="text"
+    placeholder="Поиск сделок"
+    autofocus
+    :value="modelValue"
+    @input="$emit('update:modelValue', $event.target.value)"
+  >
     <template #suffix>
       <loading-outlined v-if="isLoaded" />
       <search-outlined v-else />
