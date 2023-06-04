@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { type Ref, ref, onMounted, watch } from 'vue'
-import type { IData, IPipeline } from './types'
+import { onMounted, watch } from 'vue'
+import { storeToRefs } from 'pinia'
 import TheLayout from './components/TheLayout.vue'
 import TheTooltip from './components/TheTooltip.vue'
 import TextField from './components/TextField.vue'
@@ -9,34 +9,22 @@ import TheTag from './components/TheTag.vue'
 import TheContact from './components/TheContact.vue'
 import { NameSpace } from './const'
 import columns from './columns'
+import {
+  useDataStore,
+  useSearchTextStore,
+  useLoadingStatusStore,
+  useWarningStatusStore
+} from './stores/index'
+import type { IPipeline } from './types'
 
 const { STATUS_ID, RESPONSIBLE_USER_ID, CREATED_AT, PRICE } = NameSpace
 
-const isWarned = ref(false)
-const isLoaded = ref(false)
-const searchText = ref('')
-const data: Ref<IData> = ref({ leads: [], pipelines: [], users: [] })
+const dataStore = useDataStore()
+const warningStatusStore = useWarningStatusStore()
 
-const getData = (): void => {
-  isLoaded.value = true
-
-  fetch(`http://localhost:3000/api/leads?query=${searchText.value}`, {
-    headers: { 'Content-type': 'application/json' }
-  })
-    .then((res) => res.json())
-    .then((response: IData) => {
-      const { leads, pipelines, users } = response
-
-      const updatedLeads = leads.map((lead: object, i: number) => ({ ...lead, key: i }))
-
-      data.value = { leads: updatedLeads, pipelines, users }
-
-      isLoaded.value = false
-    })
-    .catch((error) => {
-      console.log('Looks like there was a problem: \n', error)
-    })
-}
+const { data } = storeToRefs(dataStore)
+const { searchText } = storeToRefs(useSearchTextStore())
+const { isLoaded } = storeToRefs(useLoadingStatusStore())
 
 const numberFormat = (value: number): string =>
   new Intl.NumberFormat('ru-RU', {
@@ -67,23 +55,23 @@ const getStatus = (pipelineId: number, statusId: number, value?: string): string
 
 watch(searchText, () => {
   if (searchText.value.length >= 3 || searchText.value.length === 0) {
-    isWarned.value = false
-    getData()
+    warningStatusStore.setWarned(false)
+    dataStore.setData()
     return
   }
 
-  isWarned.value = true
+  warningStatusStore.setWarned(true)
 })
 
-onMounted(() => getData())
+onMounted(() => dataStore.setData())
 </script>
 
 <template>
   <TheLayout>
     <a-card title="Пример тестового задания">
       <template #extra>
-        <TheTooltip :is-visible="isWarned" />
-        <TextField :is-loaded="isLoaded" v-model="searchText" />
+        <TheTooltip />
+        <TextField v-model="searchText" />
       </template>
     </a-card>
     <a-spin :spinning="isLoaded">

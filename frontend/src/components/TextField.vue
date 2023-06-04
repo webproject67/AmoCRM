@@ -1,8 +1,12 @@
 <script setup lang="ts">
 import { SearchOutlined, LoadingOutlined } from '@ant-design/icons-vue'
+import { storeToRefs } from 'pinia'
+import { useLoadingStatusStore } from '../stores/index'
+
+const loadingStatusStore = useLoadingStatusStore()
+const { isLoaded } = storeToRefs(loadingStatusStore)
 
 defineProps<{
-  isLoaded: boolean
   modelValue: string
 }>()
 </script>
