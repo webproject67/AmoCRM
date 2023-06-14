@@ -1,7 +1,12 @@
 <script setup lang="ts">
 import { onMounted, watch } from 'vue'
 import { storeToRefs } from 'pinia'
-import { SearchOutlined, LoadingOutlined, UserOutlined } from '@ant-design/icons-vue'
+import {
+  SearchOutlined,
+  LoadingOutlined,
+  UserOutlined,
+  WarningOutlined
+} from '@ant-design/icons-vue'
 import TheLayout from './components/TheLayout.vue'
 import TheTooltip from './components/TheTooltip.vue'
 import TextField from './components/TextField.vue'
@@ -26,6 +31,7 @@ const warningStatusStore = useWarningStatusStore()
 const { data } = storeToRefs(dataStore)
 const { searchText } = storeToRefs(useSearchTextStore())
 const { isLoaded } = storeToRefs(useLoadingStatusStore())
+const { isWarned } = storeToRefs(warningStatusStore)
 
 watch(searchText, () => {
   if (searchText.value.length >= 3 || searchText.value.length === 0) {
@@ -44,7 +50,9 @@ onMounted(() => dataStore.setData())
   <TheLayout>
     <a-card title="Пример тестового задания">
       <template #extra>
-        <TheTooltip />
+        <TheTooltip v-if="isWarned" title="Поиск работает от 3 символов">
+          <warning-outlined />
+        </TheTooltip>
         <TextField v-model="searchText" placeholder="Поиск сделок" :autofocus="true">
           <loading-outlined v-if="isLoaded" />
           <search-outlined v-else />
