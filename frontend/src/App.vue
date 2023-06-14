@@ -1,37 +1,14 @@
 <script setup lang="ts">
 import { onMounted, watch } from 'vue'
 import { storeToRefs } from 'pinia'
-import {
-  SearchOutlined,
-  LoadingOutlined,
-  UserOutlined,
-  WarningOutlined
-} from '@ant-design/icons-vue'
 import TheLayout from './components/TheLayout.vue'
-import TheTooltip from './components/TheTooltip.vue'
-import TextField from './components/TextField.vue'
-import TheAvatar from './components/TheAvatar.vue'
-import TheTag from './components/TheTag.vue'
-import TheContact from './components/TheContact.vue'
-import { numberFormat, localeDate, responsibleUser, status } from './utils/index'
-import { NameSpace } from './const'
-import columns from './columns'
-import {
-  useDataStore,
-  useSearchTextStore,
-  useLoadingStatusStore,
-  useWarningStatusStore
-} from './stores/index'
-
-const { STATUS_ID, RESPONSIBLE_USER_ID, CREATED_AT, PRICE } = NameSpace
+import TheHead from './containers/TheHead.vue'
+import LeadList from './containers/LeadList.vue'
+import { useDataStore, useSearchTextStore, useWarningStatusStore } from './stores/index'
 
 const dataStore = useDataStore()
 const warningStatusStore = useWarningStatusStore()
-
-const { data } = storeToRefs(dataStore)
 const { searchText } = storeToRefs(useSearchTextStore())
-const { isLoaded } = storeToRefs(useLoadingStatusStore())
-const { isWarned } = storeToRefs(warningStatusStore)
 
 watch(searchText, () => {
   if (searchText.value.length >= 3 || searchText.value.length === 0) {
@@ -48,46 +25,7 @@ onMounted(() => dataStore.setData())
 
 <template>
   <TheLayout>
-    <a-card title="Пример тестового задания">
-      <template #extra>
-        <TheTooltip v-if="isWarned" title="Поиск работает от 3 символов">
-          <warning-outlined />
-        </TheTooltip>
-        <TextField v-model="searchText" placeholder="Поиск сделок" :autofocus="true">
-          <loading-outlined v-if="isLoaded" />
-          <search-outlined v-else />
-        </TextField>
-      </template>
-    </a-card>
-    <a-spin :spinning="isLoaded">
-      <a-card>
-        <a-table :dataSource="data.leads" :columns="columns" :pagination="false">
-          <template #bodyCell="{ column, record }">
-            <template v-if="column.key === RESPONSIBLE_USER_ID">
-              <TheAvatar size="small">
-                <UserOutlined />
-              </TheAvatar>
-              {{ responsibleUser(data.users, record.responsible_user_id) }}
-            </template>
-            <template v-if="column.key === STATUS_ID">
-              <TheTag :color="status(data.pipelines, record.pipeline_id, record.status_id)">
-                {{ status(data.pipelines, record.pipeline_id, record.status_id, 'text') }}
-              </TheTag>
-            </template>
-            <template v-if="column.key === CREATED_AT">
-              {{ localeDate(record.created_at) }}
-            </template>
-            <template v-if="column.key === PRICE">
-              {{ numberFormat(record.price) }}
-            </template>
-          </template>
-          <template #expandedRowRender="{ record }">
-            <template v-for="contact in record.contacts" :key="contact">
-              <TheContact :contact="contact" />
-            </template>
-          </template>
-        </a-table>
-      </a-card>
-    </a-spin>
+    <TheHead />
+    <LeadList />
   </TheLayout>
 </template>
