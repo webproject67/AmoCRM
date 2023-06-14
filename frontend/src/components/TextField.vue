@@ -1,27 +1,20 @@
 <script setup lang="ts">
-import { SearchOutlined, LoadingOutlined } from '@ant-design/icons-vue'
-import { storeToRefs } from 'pinia'
-import { useLoadingStatusStore } from '../stores/index'
-
-const loadingStatusStore = useLoadingStatusStore()
-const { isLoaded } = storeToRefs(loadingStatusStore)
-
 defineProps<{
   modelValue: string
+  placeholder: string
+  autofocus: boolean
 }>()
 </script>
 
 <template>
   <a-input
-    type="text"
-    placeholder="Поиск сделок"
-    autofocus
+    :placeholder="placeholder"
     :value="modelValue"
+    :autofocus="autofocus"
     @input="$emit('update:modelValue', $event.target.value)"
   >
     <template #suffix>
-      <loading-outlined v-if="isLoaded" />
-      <search-outlined v-else />
+      <slot></slot>
     </template>
   </a-input>
 </template>

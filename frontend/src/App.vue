@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, watch } from 'vue'
 import { storeToRefs } from 'pinia'
+import { SearchOutlined, LoadingOutlined } from '@ant-design/icons-vue'
 import TheLayout from './components/TheLayout.vue'
 import TheTooltip from './components/TheTooltip.vue'
 import TextField from './components/TextField.vue'
@@ -44,7 +45,10 @@ onMounted(() => dataStore.setData())
     <a-card title="Пример тестового задания">
       <template #extra>
         <TheTooltip />
-        <TextField v-model="searchText" />
+        <TextField v-model="searchText" placeholder="Поиск сделок" :autofocus="true">
+          <loading-outlined v-if="isLoaded" />
+          <search-outlined v-else />
+        </TextField>
       </template>
     </a-card>
     <a-spin :spinning="isLoaded">
