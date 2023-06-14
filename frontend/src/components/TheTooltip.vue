@@ -11,7 +11,7 @@ defineProps<{
 </template>
 
 <style>
-.anticon-warning {
+.anticon.anticon-warning {
   margin: 0 10px;
   color: red;
 }
