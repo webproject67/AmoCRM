@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { UserOutlined } from '@ant-design/icons-vue'
+defineProps<{
+  size: 'small'
+}>()
 </script>
 
 <template>
-  <a-avatar size="small">
+  <a-avatar :size="size">
     <template #icon>
-      <UserOutlined />
+      <slot></slot>
     </template>
   </a-avatar>
 </template>

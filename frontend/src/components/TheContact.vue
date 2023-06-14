@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { UserOutlined } from '@ant-design/icons-vue'
 import TheAvatar from './TheAvatar.vue'
 import TheDivider from './TheDivider.vue'
 import { Communication } from '../const'
@@ -20,7 +21,9 @@ defineProps<{
 
 <template>
   <div class="contact">
-    <TheAvatar />
+    <TheAvatar size="small">
+      <UserOutlined />
+    </TheAvatar>
     {{ contact.name }}
     <template v-for="contacts in contact.custom_fields_values" :key="contacts">
       <template v-for="contact in contacts.values" :key="contact">

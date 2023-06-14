@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, watch } from 'vue'
 import { storeToRefs } from 'pinia'
-import { SearchOutlined, LoadingOutlined } from '@ant-design/icons-vue'
+import { SearchOutlined, LoadingOutlined, UserOutlined } from '@ant-design/icons-vue'
 import TheLayout from './components/TheLayout.vue'
 import TheTooltip from './components/TheTooltip.vue'
 import TextField from './components/TextField.vue'
@@ -56,7 +56,9 @@ onMounted(() => dataStore.setData())
         <a-table :dataSource="data.leads" :columns="columns" :pagination="false">
           <template #bodyCell="{ column, record }">
             <template v-if="column.key === RESPONSIBLE_USER_ID">
-              <TheAvatar />
+              <TheAvatar size="small">
+                <UserOutlined />
+              </TheAvatar>
               {{ responsibleUser(data.users, record.responsible_user_id) }}
             </template>
             <template v-if="column.key === STATUS_ID">
