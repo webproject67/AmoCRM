@@ -62,10 +62,9 @@ onMounted(() => dataStore.setData())
               {{ responsibleUser(data.users, record.responsible_user_id) }}
             </template>
             <template v-if="column.key === STATUS_ID">
-              <TheTag
-                :color="status(data.pipelines, record.pipeline_id, record.status_id)"
-                :text="status(data.pipelines, record.pipeline_id, record.status_id, 'text')"
-              />
+              <TheTag :color="status(data.pipelines, record.pipeline_id, record.status_id)">
+                {{ status(data.pipelines, record.pipeline_id, record.status_id, 'text') }}
+              </TheTag>
             </template>
             <template v-if="column.key === CREATED_AT">
               {{ localeDate(record.created_at) }}

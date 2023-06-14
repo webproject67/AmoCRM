@@ -1,13 +1,12 @@
 <script setup lang="ts">
 defineProps<{
   color: string
-  text: string
 }>()
 </script>
 
 <template>
   <a-tag :color="color">
-    {{ text }}
+    <slot></slot>
   </a-tag>
 </template>
 
