@@ -3,11 +3,13 @@ defineProps<{
   modelValue: string
   placeholder: string
   autofocus: boolean
+  type?: string
 }>()
 </script>
 
 <template>
   <a-input
+    :type="type || 'text'"
     :placeholder="placeholder"
     :value="modelValue"
     :autofocus="autofocus"
