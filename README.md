@@ -9,3 +9,5 @@
 ## Команды запуска
 - В папке "backend" выполнить команду "yarn start" 
 - В папке "frontend" выполнить команду "npm run dev" 
+
+![img](./preview.png)
