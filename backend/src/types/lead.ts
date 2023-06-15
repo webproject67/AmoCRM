@@ -6,5 +6,9 @@ export type Lead = {
 
 export type Leads = {
   pipeline_id: number;
-  responsible_user_id: number;
+  _embedded: {
+    contacts: {
+      id: number;
+    }[];
+  };
 }[];

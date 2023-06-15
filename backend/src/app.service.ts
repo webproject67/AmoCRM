@@ -24,23 +24,32 @@ export class AppService {
     const pipelines = await this.getPipelines(access_token);
     const users = await this.getUsers(access_token);
 
-    const gluedLeads = leads.map((lead) => {
-      const filterContacts = contacts.filter(
-        (contact) => contact.responsible_user_id === lead.responsible_user_id,
+    const leadsWithContacts = leads.map((lead) => {
+      const contactsLead = lead._embedded.contacts.map(
+        (leadEmbeddedContact) => {
+          const findContact = contacts.find(
+            (contact) => contact.id === leadEmbeddedContact.id,
+          );
+
+          return findContact;
+        },
       );
 
-      return { ...lead, contacts: filterContacts };
+      return { ...lead, contacts: contactsLead };
     });
 
     return {
-      leads: gluedLeads,
+      leads: leadsWithContacts,
       pipelines,
       users,
     };
   }
 
   private async getLeads(token: string, query: string): Promise<Leads> {
-    const response = await this.fetchGet(token, `leads?query=${query}`);
+    const response = await this.fetchGet(
+      token,
+      `leads?with=contacts&query=${query}`,
+    );
 
     if (response.status === 204) return [];
 

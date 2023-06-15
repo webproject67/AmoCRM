@@ -5,5 +5,5 @@ export type Contact = {
 };
 
 export type Contacts = {
-  responsible_user_id: number;
+  id: number;
 }[];
