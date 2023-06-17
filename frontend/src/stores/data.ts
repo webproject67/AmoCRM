@@ -9,26 +9,56 @@ export const useDataStore = defineStore('data', () => {
 
   const data: Ref<IData> = ref({ leads: [], pipelines: [], users: [] })
 
-  function setData(): void {
+  async function setData(): Promise<void> {
     loadingStatusStore.setLoaded(true)
 
-    fetch(`http://localhost:3000/api/leads?query=${searchTextStore.searchText}`, {
-      headers: { 'Content-type': 'application/json' }
-    })
-      .then((res) => res.json())
-      .then((response: IData) => {
-        const { leads, pipelines, users } = response
+    const response = await fetch(
+      `http://localhost:3000/api/leads?query=${searchTextStore.searchText}`,
+      {
+        headers: { 'Content-type': 'application/json' }
+      }
+    )
 
-        const updatedLeads = leads.map((lead: object, i: number) => ({ ...lead, key: i }))
+    if (response.ok) {
+      const json: IData = await response.json()
 
-        data.value = { leads: updatedLeads, pipelines, users }
+      const { leads, pipelines, users } = json
 
-        loadingStatusStore.setLoaded(false)
-      })
-      .catch((error) => {
-        console.log('Looks like there was a problem: \n', error)
-      })
+      const updatedLeads = leads.map((lead: object, i: number) => ({ ...lead, key: i }))
+
+      data.value = { leads: updatedLeads, pipelines, users }
+
+      loadingStatusStore.setLoaded(false)
+
+      return
+    }
+
+    console.log(response.status, response.statusText)
   }
 
   return { data, setData }
 })
+
+//? - нет использования async await
+//
+// Илья Кантор пишет можно без async await, с использованием промисов
+// https://learn.javascript.ru/fetch
+//
+// Предыдущий код:
+//
+// fetch(`http://localhost:3000/api/leads?query=${searchTextStore.searchText}`, {
+//   headers: { 'Content-type': 'application/json' }
+// })
+//   .then((res) => res.json())
+//   .then((response: IData) => {
+//     const { leads, pipelines, users } = response
+
+//     const updatedLeads = leads.map((lead: object, i: number) => ({ ...lead, key: i }))
+
+//     data.value = { leads: updatedLeads, pipelines, users }
+
+//     loadingStatusStore.setLoaded(false)
+//   })
+//   .catch((error) => {
+//     console.log('Looks like there was a problem: \n', error)
+//   })
