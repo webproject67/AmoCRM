@@ -2,22 +2,25 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import {
-  Data,
-  Token,
-  Lead,
-  Leads,
-  Contact,
-  Contacts,
-  Pipeline,
-  User,
-  UserDb,
+  IData,
+  IToken,
+  ILead,
+  IContact,
+  IPipeline,
+  IUser,
+  IUserDb,
+  IBodyParam,
+  IResponseLead,
+  IResponsePipeline,
+  IResponseUser,
+  IResponseContact,
 } from './types';
 
 @Injectable()
 export class AppService {
-  constructor(@InjectModel('User') private userModel: Model<UserDb>) {}
+  constructor(@InjectModel('User') private userModel: Model<IUserDb>) {}
 
-  async getData(query: string): Promise<Data> {
+  async getData(query: string): Promise<IData> {
     const { access_token } = await this.getTokens();
     const leads = await this.getLeads(access_token, query);
     const contacts = await this.getContacts(access_token);
@@ -45,7 +48,7 @@ export class AppService {
     };
   }
 
-  private async getLeads(token: string, query: string): Promise<Leads> {
+  private async getLeads(token: string, query: string): Promise<ILead[]> {
     const response = await this.fetchGet(
       token,
       `leads?with=contacts&query=${query}`,
@@ -53,36 +56,36 @@ export class AppService {
 
     if (response.status === 204) return [];
 
-    const result: Lead = await response.json();
+    const result: IResponseLead = await response.json();
 
     return result._embedded.leads;
   }
 
-  private async getContacts(token: string): Promise<Contacts> {
+  private async getContacts(token: string): Promise<IContact[]> {
     const response = await this.fetchGet(token, 'contacts');
 
-    const result: Contact = await response.json();
+    const result: IResponseContact = await response.json();
 
     return result._embedded.contacts;
   }
 
-  private async getPipelines(token: string): Promise<object[]> {
+  private async getPipelines(token: string): Promise<IPipeline[]> {
     const response = await this.fetchGet(token, 'leads/pipelines');
 
-    const result: Pipeline = await response.json();
+    const result: IResponsePipeline = await response.json();
 
     return result._embedded.pipelines;
   }
 
-  private async getUsers(token: string): Promise<object[]> {
+  private async getUsers(token: string): Promise<IUser[]> {
     const response = await this.fetchGet(token, 'users');
 
-    const result: User = await response.json();
+    const result: IResponseUser = await response.json();
 
     return result._embedded.users;
   }
 
-  private async updateRefreshToken(result: Token): Promise<void> {
+  private async updateRefreshToken(result: IToken): Promise<void> {
     await this.userModel.findOneAndUpdate(
       {
         domain: process.env.DOMAIN,
@@ -91,7 +94,7 @@ export class AppService {
     );
   }
 
-  private async createDocumentDB(result: Token): Promise<void> {
+  private async createDocumentDB(result: IToken): Promise<void> {
     const createDocument = new this.userModel({
       domain: process.env.DOMAIN,
       refreshToken: result.refresh_token,
@@ -99,7 +102,7 @@ export class AppService {
     createDocument.save();
   }
 
-  private async getNewTokens(refreshToken: string): Promise<Token> {
+  private async getNewTokens(refreshToken: string): Promise<IToken> {
     const response = await this.fetchPost({
       grant_type: 'refresh_token',
       refresh_token: refreshToken,
@@ -108,7 +111,7 @@ export class AppService {
     return await response.json();
   }
 
-  private async getTokens(): Promise<Token> {
+  private async getTokens(): Promise<IToken> {
     const response = await this.fetchPost({
       grant_type: 'authorization_code',
       code: process.env.CODE,
@@ -119,14 +122,16 @@ export class AppService {
         domain: process.env.DOMAIN,
       });
 
-      const result: Token = await this.getNewTokens(findDomain[0].refreshToken);
+      const result: IToken = await this.getNewTokens(
+        findDomain[0].refreshToken,
+      );
 
       this.updateRefreshToken(result);
 
       return result;
     }
 
-    const result: Token = await response.json();
+    const result: IToken = await response.json();
 
     const findDomain = await this.userModel.findOne({
       domain: process.env.DOMAIN,
@@ -147,7 +152,7 @@ export class AppService {
     });
   }
 
-  private async fetchPost(bodyParam: object): Promise<Response> {
+  private async fetchPost(bodyParam: IBodyParam): Promise<Response> {
     const body = {
       client_id: process.env.CLIENT_ID,
       client_secret: process.env.CLIENT_SECRET,
