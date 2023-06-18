@@ -15,7 +15,7 @@ import TheContact from './components/TheContact.vue'
 import { numberFormat, localeDate, responsibleUser, status, getData } from './utils/index'
 import { NameSpace } from './const'
 import columns from './columns'
-import type { IData } from './types'
+import type { IData, ILead, IColumn } from './types'
 
 const { STATUS_ID, RESPONSIBLE_USER_ID, CREATED_AT, PRICE } = NameSpace
 
@@ -63,7 +63,7 @@ onMounted(async () => {
     <a-spin :spinning="isLoaded">
       <a-card>
         <a-table :dataSource="data.leads" :columns="columns" :pagination="false">
-          <template #bodyCell="{ column, record }">
+          <template #bodyCell="{ column, record }: { column: IColumn, record: ILead }">
             <template v-if="column.key === RESPONSIBLE_USER_ID">
               <TheAvatar size="small">
                 <UserOutlined />

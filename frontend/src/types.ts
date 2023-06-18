@@ -1,7 +1,17 @@
+import type { NameSpace } from './const'
+
 export interface IData {
-  leads: object[]
+  leads: ILead[]
   pipelines: IPipeline[]
   users: IUser[]
+}
+
+export interface ILead {
+  responsible_user_id: number
+  pipeline_id: number
+  status_id: number
+  created_at: number
+  price: number
 }
 
 export interface IPipeline {
@@ -18,4 +28,12 @@ export interface IPipeline {
 export interface IUser {
   id: number
   name: string
+}
+
+export interface IColumn {
+  title: string
+  dataIndex: NameSpace
+  key: NameSpace
+  width: string
+  align?: 'center'
 }
