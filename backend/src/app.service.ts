@@ -65,7 +65,7 @@ export class AppService {
     );
   }
 
-  private async createDocumentDB(result: IToken): Promise<void> {
+  private createDocumentDB(result: IToken): void {
     const createDocument = new this.userModel({
       domain: process.env.DOMAIN,
       refreshToken: result.refresh_token,
@@ -79,7 +79,12 @@ export class AppService {
       refresh_token: refreshToken,
     });
 
-    return await response.json();
+    if (response.ok) return await response.json();
+
+    throw new HttpException(
+      'Internal Server Error',
+      HttpStatus.INTERNAL_SERVER_ERROR,
+    );
   }
 
   private async getTokens(): Promise<IToken> {
@@ -105,17 +110,24 @@ export class AppService {
       return result;
     }
 
-    const result: IToken = await response.json();
+    if (response.ok) {
+      const result: IToken = await response.json();
 
-    const findDomain = await this.userModel.findOne({
-      domain: process.env.DOMAIN,
-    });
+      const findDomain = await this.userModel.findOne({
+        domain: process.env.DOMAIN,
+      });
 
-    findDomain
-      ? this.updateRefreshToken(result)
-      : this.createDocumentDB(result);
+      findDomain
+        ? this.updateRefreshToken(result)
+        : this.createDocumentDB(result);
 
-    return result;
+      return result;
+    }
+
+    throw new HttpException(
+      'Internal Server Error',
+      HttpStatus.INTERNAL_SERVER_ERROR,
+    );
   }
 
   private async getPieceData(
@@ -129,8 +141,12 @@ export class AppService {
     });
 
     if (response.status === 204) return { _embedded: { leads: [] } };
+    if (response.ok) return await response.json();
 
-    return await response.json();
+    throw new HttpException(
+      'Internal Server Error',
+      HttpStatus.INTERNAL_SERVER_ERROR,
+    );
   }
 
   private async fetchPost(bodyParam: IBodyParam): Promise<Response> {
