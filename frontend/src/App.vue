@@ -25,29 +25,30 @@ const errorMessage = ref('')
 const isWarned = ref(false)
 const isLoaded = ref(false)
 
-watch(searchText, async () => {
+watch(searchText, () => {
   const searchTextValue = searchText.value
 
   if (searchTextValue.length >= 3 || searchTextValue.length === 0) {
     isWarned.value = false
-    isLoaded.value = true
-    const loadData = await getData(searchTextValue)
-    if (typeof loadData === 'object') data.value = loadData
-    if (typeof loadData === 'string') errorMessage.value = loadData
-    isLoaded.value = false
+    loadData(searchTextValue)
     return
   }
 
   isWarned.value = true
 })
 
-onMounted(async () => {
+onMounted(() => loadData())
+
+async function loadData(searchTextValue?: string): Promise<void> {
   isLoaded.value = true
-  const loadData = await getData()
-  if (typeof loadData === 'object') data.value = loadData
+  const loadData = await getData(searchTextValue)
+  if (typeof loadData === 'object') {
+    data.value = loadData
+    errorMessage.value = ''
+  }
   if (typeof loadData === 'string') errorMessage.value = loadData
   isLoaded.value = false
-})
+}
 </script>
 
 <template>
