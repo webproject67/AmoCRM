@@ -10,7 +10,13 @@ import { UserSchema } from './user.schema';
     ConfigModule.forRoot({
       envFilePath: '.development.env',
     }),
-    MongooseModule.forRoot('mongodb://127.0.0.1:27017/webprojectuserdb'),
+    MongooseModule.forRoot(
+      `mongodb://${
+        process.env.DOCKER_MONGODB_URL
+          ? process.env.DOCKER_MONGODB_URL
+          : '127.0.0.1'
+      }:27017/`,
+    ),
     MongooseModule.forFeature([{ name: 'User', schema: UserSchema }]),
   ],
   controllers: [AppController],

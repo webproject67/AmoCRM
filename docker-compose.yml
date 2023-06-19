@@ -1,0 +1,37 @@
+version: "3.1"
+
+services:
+  frontend:
+    build:
+      context: frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    volumes:
+      - /frontend/node_modules
+    ports:
+      - 8080:80
+  backend:
+    build:
+      context: backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    volumes:
+      - /backend/node_modules
+    ports:
+      - 3000:3000
+    depends_on:
+      - mongo
+    environment:
+      CLIENT_ID: "*****-****-****-****-**********"
+      CLIENT_SECRET: "=****************************************"
+      CODE: "=************************************************************************************"
+      DOMAIN: "https://*********.amocrm.ru"
+      DOCKER_MONGODB_URL: root:example@mongo
+  mongo:
+    image: mongo
+    restart: always
+  mongo-express:
+    image: mongo-express
+    restart: always
+    ports:
+      - 8081:8081
