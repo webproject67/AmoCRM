@@ -4,16 +4,9 @@ import { Model } from 'mongoose';
 import {
   IData,
   IToken,
-  ILead,
-  IContact,
-  IPipeline,
-  IUser,
   IUserDb,
   IBodyParam,
-  IResponseLead,
-  IResponsePipeline,
-  IResponseUser,
-  IResponseContact,
+  IResponsePieceData,
 } from './types';
 
 @Injectable()
@@ -22,10 +15,25 @@ export class AppService {
 
   async getData(query: string): Promise<IData> {
     const { access_token } = await this.getTokens();
-    const leads = await this.getLeads(access_token, query);
-    const contacts = await this.getContacts(access_token);
-    const pipelines = await this.getPipelines(access_token);
-    const users = await this.getUsers(access_token);
+
+    const {
+      _embedded: { leads },
+    } = await this.getPieceData(
+      access_token,
+      `leads?with=contacts&query=${query}`,
+    );
+
+    const {
+      _embedded: { contacts },
+    } = await this.getPieceData(access_token, 'contacts');
+
+    const {
+      _embedded: { pipelines },
+    } = await this.getPieceData(access_token, 'leads/pipelines');
+
+    const {
+      _embedded: { users },
+    } = await this.getPieceData(access_token, 'users');
 
     const leadsWithContacts = leads.map((lead) => {
       const contactsLead = lead._embedded.contacts.map(
@@ -46,43 +54,6 @@ export class AppService {
       pipelines,
       users,
     };
-  }
-
-  private async getLeads(token: string, query: string): Promise<ILead[]> {
-    const response = await this.fetchGet(
-      token,
-      `leads?with=contacts&query=${query}`,
-    );
-
-    if (response.status === 204) return [];
-
-    const result: IResponseLead = await response.json();
-
-    return result._embedded.leads;
-  }
-
-  private async getContacts(token: string): Promise<IContact[]> {
-    const response = await this.fetchGet(token, 'contacts');
-
-    const result: IResponseContact = await response.json();
-
-    return result._embedded.contacts;
-  }
-
-  private async getPipelines(token: string): Promise<IPipeline[]> {
-    const response = await this.fetchGet(token, 'leads/pipelines');
-
-    const result: IResponsePipeline = await response.json();
-
-    return result._embedded.pipelines;
-  }
-
-  private async getUsers(token: string): Promise<IUser[]> {
-    const response = await this.fetchGet(token, 'users');
-
-    const result: IResponseUser = await response.json();
-
-    return result._embedded.users;
   }
 
   private async updateRefreshToken(result: IToken): Promise<void> {
@@ -147,12 +118,19 @@ export class AppService {
     return result;
   }
 
-  private async fetchGet(token: string, urn: string): Promise<Response> {
-    return await fetch(`${process.env.DOMAIN}/api/v4/${urn}`, {
+  private async getPieceData(
+    token: string,
+    urn: string,
+  ): Promise<IResponsePieceData> {
+    const response = await fetch(`${process.env.DOMAIN}/api/v4/${urn}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
+
+    if (response.status === 204) return { _embedded: { leads: [] } };
+
+    return await response.json();
   }
 
   private async fetchPost(bodyParam: IBodyParam): Promise<Response> {

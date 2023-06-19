@@ -25,27 +25,12 @@ export interface IContact {
   id: number;
 }
 
-export interface IResponseLead {
+export interface IResponsePieceData {
   _embedded: {
-    leads: ILead[];
-  };
-}
-
-export interface IResponsePipeline {
-  _embedded: {
-    pipelines: IPipeline[];
-  };
-}
-
-export interface IResponseUser {
-  _embedded: {
-    users: IUser[];
-  };
-}
-
-export interface IResponseContact {
-  _embedded: {
-    contacts: IContact[];
+    leads?: ILead[];
+    contacts?: IContact[];
+    pipelines?: IPipeline[];
+    users?: IUser[];
   };
 }
 
