@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import {
@@ -121,6 +121,9 @@ export class AppService {
       const findDomain = await this.userModel.find({
         domain: process.env.DOMAIN,
       });
+
+      if (!findDomain.length)
+        throw new HttpException('Bad Request', HttpStatus.BAD_REQUEST);
 
       const result: IToken = await this.getNewTokens(
         findDomain[0].refreshToken,

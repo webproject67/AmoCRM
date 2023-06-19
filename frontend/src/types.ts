@@ -37,3 +37,8 @@ export interface IColumn {
   width: string
   align?: 'center'
 }
+
+export interface IError {
+  statusCode: number
+  message: string
+}

@@ -1,6 +1,6 @@
-import type { IData, ILead } from '../types'
+import type { IData, ILead, IError } from '../types'
 
-export default async function getData(searchText: string = ''): Promise<IData | void> {
+export default async function getData(searchText: string = ''): Promise<IData | string> {
   const response = await fetch(`http://localhost:3000/api/leads?query=${searchText}`, {
     headers: { 'Content-type': 'application/json' }
   })
@@ -13,5 +13,7 @@ export default async function getData(searchText: string = ''): Promise<IData | 
     return { leads: updatedLeads, pipelines, users }
   }
 
-  console.log(response.status, response.statusText)
+  const error: IError = await response.json()
+
+  return `${error.statusCode} ${error.message}`
 }

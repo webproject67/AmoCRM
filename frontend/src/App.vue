@@ -21,6 +21,7 @@ const { STATUS_ID, RESPONSIBLE_USER_ID, CREATED_AT, PRICE } = NameSpace
 
 const data: Ref<IData> = ref({ leads: [], pipelines: [], users: [] })
 const searchText = ref('')
+const errorMessage = ref('')
 const isWarned = ref(false)
 const isLoaded = ref(false)
 
@@ -31,7 +32,8 @@ watch(searchText, async () => {
     isWarned.value = false
     isLoaded.value = true
     const fetchGetData = await getData(searchTextValue)
-    if (fetchGetData) data.value = fetchGetData
+    if (typeof fetchGetData === 'object') data.value = fetchGetData
+    if (typeof fetchGetData === 'string') errorMessage.value = fetchGetData
     isLoaded.value = false
     return
   }
@@ -42,13 +44,15 @@ watch(searchText, async () => {
 onMounted(async () => {
   isLoaded.value = true
   const fetchGetData = await getData()
-  if (fetchGetData) data.value = fetchGetData
+  if (typeof fetchGetData === 'object') data.value = fetchGetData
+  if (typeof fetchGetData === 'string') errorMessage.value = fetchGetData
   isLoaded.value = false
 })
 </script>
 
 <template>
   <TheLayout>
+    <a-alert v-if="errorMessage" type="error" :message="errorMessage" banner />
     <a-card title="Пример тестового задания">
       <template #extra>
         <TheTooltip v-if="isWarned" title="Поиск работает от 3 символов">
