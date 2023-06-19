@@ -74,7 +74,7 @@ export class AppService {
   }
 
   private async getNewTokens(refreshToken: string): Promise<IToken> {
-    const response = await this.fetchPost({
+    const response = await this.loadToken({
       grant_type: 'refresh_token',
       refresh_token: refreshToken,
     });
@@ -88,7 +88,7 @@ export class AppService {
   }
 
   private async getTokens(): Promise<IToken> {
-    const response = await this.fetchPost({
+    const response = await this.loadToken({
       grant_type: 'authorization_code',
       code: process.env.CODE,
     });
@@ -149,7 +149,7 @@ export class AppService {
     );
   }
 
-  private async fetchPost(bodyParam: IBodyParam): Promise<Response> {
+  private async loadToken(bodyParam: IBodyParam): Promise<Response> {
     const body = {
       client_id: process.env.CLIENT_ID,
       client_secret: process.env.CLIENT_SECRET,

@@ -31,9 +31,9 @@ watch(searchText, async () => {
   if (searchTextValue.length >= 3 || searchTextValue.length === 0) {
     isWarned.value = false
     isLoaded.value = true
-    const fetchGetData = await getData(searchTextValue)
-    if (typeof fetchGetData === 'object') data.value = fetchGetData
-    if (typeof fetchGetData === 'string') errorMessage.value = fetchGetData
+    const loadData = await getData(searchTextValue)
+    if (typeof loadData === 'object') data.value = loadData
+    if (typeof loadData === 'string') errorMessage.value = loadData
     isLoaded.value = false
     return
   }
@@ -43,9 +43,9 @@ watch(searchText, async () => {
 
 onMounted(async () => {
   isLoaded.value = true
-  const fetchGetData = await getData()
-  if (typeof fetchGetData === 'object') data.value = fetchGetData
-  if (typeof fetchGetData === 'string') errorMessage.value = fetchGetData
+  const loadData = await getData()
+  if (typeof loadData === 'object') data.value = loadData
+  if (typeof loadData === 'string') errorMessage.value = loadData
   isLoaded.value = false
 })
 </script>
