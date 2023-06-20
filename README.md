@@ -1,7 +1,7 @@
 # AmoCRM
 Интеграция amoCRM с сайтом API.
 
-- На сайте amoCRM, создайте интеграцию, ссылка на перерегистрацию "http://localhost:3000", после заполнения данных предоставят ключи.
+- На сайте amoCRM, создайте интеграцию, после заполнения данных предоставят ключи.
 
 ## Первый вариант запуска:
 ## Перед запуском
@@ -28,10 +28,10 @@ docker-compose stop
 ```
 
 ## Перейти по адресу:
- - [http://localhost:8080](http://localhost:8080)
+- [http://localhost:8080](http://localhost:8080)
 
 ## Доступ к mongoDB:
-- **URL:** [http://localhost:8081](http://localhost:8081)
+- [http://localhost:8081](http://localhost:8081)
 
 ## Пример как выглядит
 ![img](./preview.png)

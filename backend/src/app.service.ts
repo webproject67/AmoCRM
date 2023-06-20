@@ -153,7 +153,7 @@ export class AppService {
     const body = {
       client_id: process.env.CLIENT_ID,
       client_secret: process.env.CLIENT_SECRET,
-      redirect_uri: 'http://localhost:3000',
+      redirect_uri: process.env.REDIRECT_URI,
     };
 
     return await fetch(`${process.env.DOMAIN}/oauth2/access_token`, {
